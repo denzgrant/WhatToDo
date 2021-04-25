@@ -1,31 +1,35 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:what_to_do/models/task.dart';
+import 'package:provider/provider.dart';
+import 'package:what_to_do/models/task_data.dart';
 import 'package:what_to_do/widgets/task_tile.dart';
 
-class TasksList extends StatefulWidget {
-  final List<Task> tasks;
-  TasksList(this.tasks);
-
-  @override
-  _TasksListState createState() => _TasksListState();
-}
-
-class _TasksListState extends State<TasksList> {
+class TasksList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemBuilder: (context, index) {
-        return TaskTile(
-            taskTitle: widget.tasks[index].name,
-            isChecked: widget.tasks[index].isDone,
-            checkBoxCallBack: (bool checkBoxState) {
-              setState(() {
-                widget.tasks[index].toggleDone();
-              });
-            });
+    return Consumer<TaskData>(
+      //consume the TaskData
+      builder: (context, taskData, child) {
+        return ListView.builder(
+          itemBuilder: (context, index) {
+            final taskIndex = taskData.tasks[index];
+            return TaskTile(
+              taskTitle: taskIndex.name,
+              isChecked: taskIndex.isDone,
+              checkBoxCallBack: (bool checkBoxState) {
+                taskData.updateTask(taskIndex);
+              },
+              longPressCallBack: () {
+                taskData.deleteTask(taskIndex);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Deleted ${taskIndex.name}'),
+                ));
+              },
+            );
+          },
+          itemCount: taskData.taskCount,
+        );
       },
-      itemCount: widget.tasks.length,
     );
   }
 }
